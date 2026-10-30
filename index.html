@@ -165,14 +165,19 @@
     background:linear-gradient(to top, var(--bg) 78%, transparent);
   }
   .composer{
-    display:flex;align-items:center;gap:8px;
-    height:54px;padding:0 6px 0 18px;
+    display:flex;align-items:flex-end;gap:8px;
+    min-height:54px;padding:7px 6px 7px 18px;
     background:var(--surface);
     border:1px solid var(--line);border-radius:27px;
     box-shadow:0 2px 10px rgba(28,29,27,.05);
   }
-  .composer input{flex:1;min-width:0;font-size:15px}
-  .composer input::placeholder{color:var(--faint)}
+  .composer textarea{
+    flex:1;min-width:0;font-size:15px;font-family:inherit;color:inherit;
+    border:0;outline:0;background:none;resize:none;
+    line-height:22px;padding:9px 0;margin:0;
+    max-height:132px;overflow-y:auto;display:block;
+  }
+  .composer textarea::placeholder{color:var(--faint)}
   .send{
     flex:none;height:42px;padding:0 18px;border-radius:21px;
     background:var(--brand);color:#fff;
@@ -320,7 +325,7 @@
   <!-- 底部输入 -->
   <div class="composer-wrap">
     <div class="composer">
-      <input id="nl" type="text" autocomplete="off" enterkeyhint="done" placeholder="午饭35，打车26.5……">
+      <textarea id="nl" rows="1" autocomplete="off" enterkeyhint="done" placeholder="午饭35，打车26.5……"></textarea>
       <button class="send" id="sendBtn" type="button">
         记下
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
@@ -602,10 +607,16 @@
         toast("已撤销");
       }
     });
+    nl.style.height = "auto";
     nl.focus();
   }
+  function autoGrow(){
+    nl.style.height = "auto";
+    nl.style.height = Math.min(nl.scrollHeight, 132) + "px";
+  }
+  nl.addEventListener("input", autoGrow);
   nl.addEventListener("keydown", function(e){
-    if(e.key === "Enter"){ e.preventDefault(); commit(); }
+    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); commit(); }
   });
   document.getElementById("sendBtn").addEventListener("click", commit);
 

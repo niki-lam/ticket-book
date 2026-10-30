@@ -1,6 +1,6 @@
 /* 离线缓存：只缓存白名单内的应用自身文件。
    路径全部相对于 Service Worker 注册作用域（GitHub Pages 子路径也能正常工作）。 */
-const CACHE = "ticket-v9";
+const CACHE = "ticket-v10";
 const BASE = new URL("./", self.registration.scope).pathname;
 const REL = ["", "index.html", "parser.js", "manifest.webmanifest", "icon.svg", "assets/icon-192.png", "assets/icon-512.png"];
 const ASSETS = REL.map((p) => BASE + p);
