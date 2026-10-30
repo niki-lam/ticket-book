@@ -1,0 +1,16 @@
+{
+  "name": "小票账本",
+  "short_name": "小票",
+  "description": "本地记账，一句话记一笔",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3ECFA",
+  "theme_color": "#F3ECFA",
+  "icons": [
+    { "src": "assets/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "assets/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "assets/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}
