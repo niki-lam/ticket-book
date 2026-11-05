@@ -407,14 +407,28 @@
       var raw = localStorage.getItem(KEY);
       if(raw){
         var s = JSON.parse(raw);
-        if(s && s.v === 1) return Object.assign(defaults(), s);
+        if(s && s.v === 1){
+          var base = Object.assign(defaults(), s);
+          /* 清洗畸形记录：缺字段的记录补默认值，避免渲染崩溃 */
+          base.records = (base.records || []).map(function(r){
+            if(!r || typeof r !== "object") return null;
+            return {
+              id: r.id || uid(),
+              name: r.name == null ? "" : String(r.name),
+              cat: CAT_LABEL[r.cat] ? r.cat : "other",
+              amt: isFinite(+r.amt) ? +r.amt : 0,
+              date: /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : todayStr()
+            };
+          }).filter(Boolean);
+          return base;
+        }
       }
     }catch(e){}
     return defaults();
   })();
   function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-  function money(n){ return n.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function money(n){ n = +n; if(!isFinite(n)) n = 0; return n.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
   /* ---------- 视图状态 ---------- */
   var view = { month: null, search: "" };
