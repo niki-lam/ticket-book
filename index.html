@@ -256,6 +256,12 @@
     width:100%;display:flex;align-items:center;justify-content:space-between;
     padding:16px 2px;font-size:15px;color:var(--danger);
   }
+  .settings .action-row{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 2px;font-size:15px;color:var(--ink2);
+    background:none;border:0;font:inherit;cursor:pointer;text-align:left;
+  }
+  .settings .action-row + .action-row{border-top:1px solid var(--line)}
   .settings .note{font-size:12.5px;color:var(--muted);line-height:1.7;margin:4px 0 0}
 
   @media (min-width:600px){
@@ -372,6 +378,15 @@
         <label for="budgetInput">每月预算（元）</label>
         <input id="budgetInput" type="number" inputmode="decimal" min="0" step="100">
       </div>
+      <button class="action-row" id="exportBtn" type="button">
+        <span>导出备份</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <button class="action-row" id="importBtn" type="button">
+        <span>导入备份</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <input id="importFile" type="file" accept=".json,application/json" style="display:none">
       <button class="danger-row" id="clearAll" type="button">
         <span>清除本机全部数据</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -728,6 +743,56 @@
     view.search = ""; searchInput.value = "";
     render();
     toast("已清除全部数据");
+  });
+
+  /* ---------- 导入 / 导出备份 ---------- */
+  function exportData(){
+    var payload = JSON.stringify({ v:1, exportedAt: new Date().toISOString(), records: state.records, budget: state.budget });
+    var blob = new Blob([payload], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var d = new Date();
+    a.href = url;
+    a.download = "小票账本-备份-" + d.getFullYear() + p2(d.getMonth()+1) + p2(d.getDate()) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    toast("已导出 " + state.records.length + " 笔");
+  }
+  document.getElementById("exportBtn").addEventListener("click", exportData);
+
+  var importFile = document.getElementById("importFile");
+  document.getElementById("importBtn").addEventListener("click", function(){ importFile.value = ""; importFile.click(); });
+  importFile.addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if(!data || !Array.isArray(data.records)) throw new Error("格式不对");
+        if(!confirm("导入会覆盖当前所有数据，确定继续？")) return;
+        state.records = data.records.map(function(r){
+          if(!r || typeof r !== "object") return null;
+          return {
+            id: r.id || uid(),
+            name: r.name == null ? "" : String(r.name),
+            cat: CAT_LABEL[r.cat] ? r.cat : "other",
+            amt: isFinite(+r.amt) ? +r.amt : 0,
+            date: /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : todayStr()
+          };
+        }).filter(Boolean);
+        if(isFinite(+data.budget)) state.budget = +data.budget;
+        persist();
+        render();
+        settingsWrap.classList.remove("show");
+        toast("已导入 " + state.records.length + " 笔");
+      }catch(err){
+        alert("导入失败：文件格式不对，请选择从小票账本导出的备份文件。");
+      }
+    };
+    reader.readAsText(file, "utf-8");
   });
 
   /* ---------- 启动 ---------- */
